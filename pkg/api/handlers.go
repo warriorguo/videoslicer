@@ -33,7 +33,7 @@ func NewHandler(db *database.DB, taskDir string, maxSize int64) *Handler {
 }
 
 type CreateTaskRequest struct {
-	SegmentSec       int    `json:"segment_sec"`
+	SegmentSec       float64 `json:"segment_sec"`
 	FrameIntervalSec int    `json:"frame_interval_sec"`
 	FrameFormat      string `json:"frame_format"`
 	ZipFormat        string `json:"zip_format"`
@@ -63,7 +63,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	segmentSec := getIntParam(r, "segment_sec", 8)
+	segmentSec := getFloatParam(r, "segment_sec", 8)
 	frameIntervalSec := getIntParam(r, "frame_interval_sec", 2)
 	frameFormat := getStringParam(r, "frame_format", "jpg")
 	zipFormat := getStringParam(r, "zip_format", "zip")
@@ -286,6 +286,15 @@ func isValidVideoFile(filename string) bool {
 func getIntParam(r *http.Request, key string, defaultVal int) int {
 	if val := r.FormValue(key); val != "" {
 		if parsed, err := strconv.Atoi(val); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
+}
+
+func getFloatParam(r *http.Request, key string, defaultVal float64) float64 {
+	if val := r.FormValue(key); val != "" {
+		if parsed, err := strconv.ParseFloat(val, 64); err == nil {
 			return parsed
 		}
 	}

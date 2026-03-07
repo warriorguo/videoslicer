@@ -102,12 +102,13 @@ func (p *Processor) Probe(videoPath string) (*VideoInfo, error) {
 	return info, nil
 }
 
-func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec int) ([]string, error) {
+func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec float64) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	
+
 	outputPattern := filepath.Join(outputDir, "c%03d.mp4")
-	
+	segmentTime := fmt.Sprintf("%.4f", segmentSec)
+
 	// Try fast copy mode first
 	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-hide_banner", "-y",
@@ -115,10 +116,10 @@ func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec int) ([]s
 		"-c", "copy",
 		"-map", "0",
 		"-f", "segment",
-		"-segment_time", strconv.Itoa(segmentSec),
+		"-segment_time", segmentTime,
 		"-reset_timestamps", "1",
 		outputPattern)
-	
+
 	if err := cmd.Run(); err != nil {
 		// Fallback to re-encoding mode
 		cmd = exec.CommandContext(ctx, "ffmpeg",
@@ -130,7 +131,7 @@ func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec int) ([]s
 			"-c:a", "aac",
 			"-b:a", "128k",
 			"-f", "segment",
-			"-segment_time", strconv.Itoa(segmentSec),
+			"-segment_time", segmentTime,
 			"-reset_timestamps", "1",
 			outputPattern)
 		
@@ -156,15 +157,24 @@ func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec int) ([]s
 func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec int, format string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	
+
 	outputPattern := filepath.Join(outputDir, "f%04d."+format)
-	fpsFilter := fmt.Sprintf("fps=1/%d", intervalSec)
-	
-	cmd := exec.CommandContext(ctx, "ffmpeg",
-		"-hide_banner", "-y",
-		"-i", clipPath,
-		"-vf", fpsFilter,
-		outputPattern)
+
+	var cmd *exec.Cmd
+	if intervalSec <= 0 {
+		// Extract every frame
+		cmd = exec.CommandContext(ctx, "ffmpeg",
+			"-hide_banner", "-y",
+			"-i", clipPath,
+			outputPattern)
+	} else {
+		fpsFilter := fmt.Sprintf("fps=1/%d", intervalSec)
+		cmd = exec.CommandContext(ctx, "ffmpeg",
+			"-hide_banner", "-y",
+			"-i", clipPath,
+			"-vf", fpsFilter,
+			outputPattern)
+	}
 	
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("ffmpeg frame extraction failed: %w", err)

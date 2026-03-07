@@ -44,7 +44,7 @@ type VideoTask struct {
 	ManifestPath string `db:"manifest_path" json:"manifest_path"`
 	
 	// Processing parameters
-	SegmentSec       int    `db:"segment_sec" json:"segment_sec"`
+	SegmentSec       float64 `db:"segment_sec" json:"segment_sec"`
 	FrameIntervalSec int    `db:"frame_interval_sec" json:"frame_interval_sec"`
 	FrameFormat     string `db:"frame_format" json:"frame_format"`
 	ZipFormat       string `db:"zip_format" json:"zip_format"`
@@ -67,7 +67,7 @@ type TaskProgress struct {
 }
 
 type TaskParams struct {
-	SegmentSec       int    `json:"segment_sec"`
+	SegmentSec       float64 `json:"segment_sec"`
 	FrameIntervalSec int    `json:"frame_interval_sec"`
 	FrameFormat     string `json:"frame_format"`
 	ZipFormat       string `json:"zip_format"`

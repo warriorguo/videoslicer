@@ -167,8 +167,8 @@ func (w *Worker) processTask(task *models.VideoTask) error {
 		
 		clips[i] = models.ClipInfo{
 			ClipID:   clipID,
-			StartSec: float64(i * task.SegmentSec),
-			EndSec:   float64((i + 1) * task.SegmentSec),
+			StartSec: float64(i) * task.SegmentSec,
+			EndSec:   float64(i+1) * task.SegmentSec,
 			File:     filepath.Join("clips", filepath.Base(clipFile)),
 			Frames:   relativeFrames,
 		}
