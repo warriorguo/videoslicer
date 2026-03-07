@@ -13,11 +13,11 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Copy source code
+# Copy source code (bust cache on every build)
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o videoslicer ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-X main.buildTime=$(date -u +%Y%m%d%H%M%S)" -o videoslicer ./cmd/server
 
 # Runtime stage
 FROM alpine:3.18
