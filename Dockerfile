@@ -35,8 +35,8 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/videoslicer .
 
-# Create tasks directory
-RUN mkdir -p /app/tasks && chown -R videoslicer:videoslicer /app
+# Create tasks directory and invalidate cache
+RUN mkdir -p /app/tasks && chown -R videoslicer:videoslicer /app && echo "built $(date -u)"
 
 # Switch to app user
 USER videoslicer
