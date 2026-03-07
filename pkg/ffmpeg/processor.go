@@ -175,9 +175,11 @@ func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec int, f
 			"-vf", fpsFilter,
 			outputPattern)
 	}
-	
+
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("ffmpeg frame extraction failed: %w", err)
+		return nil, fmt.Errorf("ffmpeg frame extraction failed: %w, stderr: %s", err, stderr.String())
 	}
 	
 	// Find generated frame files
