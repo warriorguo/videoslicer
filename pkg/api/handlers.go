@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -67,6 +68,9 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	frameIntervalSec := getIntParam(r, "frame_interval_sec", 2)
 	frameFormat := getStringParam(r, "frame_format", "jpg")
 	zipFormat := getStringParam(r, "zip_format", "zip")
+
+	log.Printf("CreateTask params: segment_sec=%v, frame_interval_sec=%v, frame_format=%v, zip_format=%v",
+		segmentSec, frameIntervalSec, frameFormat, zipFormat)
 
 	taskID := "t_" + xid.New().String()
 	
