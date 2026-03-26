@@ -154,7 +154,7 @@ func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec float64) 
 	return matches, nil
 }
 
-func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec int, format string) ([]string, error) {
+func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float64, format string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
@@ -168,7 +168,7 @@ func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec int, f
 			"-i", clipPath,
 			outputPattern)
 	} else {
-		fpsFilter := fmt.Sprintf("fps=1/%d", intervalSec)
+		fpsFilter := fmt.Sprintf("fps=1/%g", intervalSec)
 		cmd = exec.CommandContext(ctx, "ffmpeg",
 			"-hide_banner", "-y",
 			"-i", clipPath,

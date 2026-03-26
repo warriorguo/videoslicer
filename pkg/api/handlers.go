@@ -35,7 +35,7 @@ func NewHandler(db *database.DB, taskDir string, maxSize int64) *Handler {
 
 type CreateTaskRequest struct {
 	SegmentSec       float64 `json:"segment_sec"`
-	FrameIntervalSec int    `json:"frame_interval_sec"`
+	FrameIntervalSec float64 `json:"frame_interval_sec"`
 	FrameFormat      string `json:"frame_format"`
 	ZipFormat        string `json:"zip_format"`
 }
@@ -65,7 +65,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	segmentSec := getFloatParam(r, "segment_sec", 8)
-	frameIntervalSec := getIntParam(r, "frame_interval_sec", 2)
+	frameIntervalSec := getFloatParam(r, "frame_interval_sec", 2)
 	frameFormat := getStringParam(r, "frame_format", "jpg")
 	zipFormat := getStringParam(r, "zip_format", "zip")
 

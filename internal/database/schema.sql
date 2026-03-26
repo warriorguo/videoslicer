@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS video_tasks (
     manifest_path TEXT,
     
     segment_sec DOUBLE PRECISION NOT NULL DEFAULT 8,
-    frame_interval_sec INTEGER NOT NULL DEFAULT 2,
+    frame_interval_sec DOUBLE PRECISION NOT NULL DEFAULT 2,
     frame_format VARCHAR(10) NOT NULL DEFAULT 'jpg',
     zip_format VARCHAR(10) NOT NULL DEFAULT 'zip',
     

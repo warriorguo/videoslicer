@@ -23,7 +23,7 @@ type VideoInputInfo struct {
 
 type ProcessingParams struct {
 	SegmentSec       float64 `json:"segment_sec"`
-	FrameIntervalSec int    `json:"frame_interval_sec"`
+	FrameIntervalSec float64 `json:"frame_interval_sec"`
 	FrameFormat      string `json:"frame_format"`
 	ZipFormat        string `json:"zip_format"`
 }

@@ -167,9 +167,9 @@ func TestWorkflowSimulation(t *testing.T) {
 		t.Fatalf("Step 4 failed - create clips directory: %v", err)
 	}
 	
-	segmentSec := 8
-	numClips := int(videoInfo.Duration) / segmentSec
-	if int(videoInfo.Duration)%segmentSec > 0 {
+	segmentSec := 8.0
+	numClips := int(videoInfo.Duration / segmentSec)
+	if videoInfo.Duration-float64(numClips)*segmentSec > 0 {
 		numClips++
 	}
 	
@@ -187,8 +187,8 @@ func TestWorkflowSimulation(t *testing.T) {
 		
 		clips = append(clips, models.ClipInfo{
 			ClipID:   clipID,
-			StartSec: float64(i * segmentSec),
-			EndSec:   float64((i + 1) * segmentSec),
+			StartSec: float64(i) * segmentSec,
+			EndSec:   float64(i+1) * segmentSec,
 			File:     fmt.Sprintf("clips/%s.mp4", clipID),
 			Frames:   []string{}, // Will be filled in next step
 		})
@@ -207,8 +207,8 @@ func TestWorkflowSimulation(t *testing.T) {
 		}
 		
 		// Simulate extracting frames every 2 seconds
-		frameIntervalSec := 2
-		numFrames := segmentSec / frameIntervalSec
+		frameIntervalSec := 2.0
+		numFrames := int(segmentSec / frameIntervalSec)
 		
 		var frameFiles []string
 		for j := 0; j < numFrames; j++ {

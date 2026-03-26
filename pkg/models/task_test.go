@@ -64,9 +64,9 @@ func TestVideoTaskDefaults(t *testing.T) {
 		t.Errorf("Expected status 'queued', got %s", task.Status)
 	}
 	if task.SegmentSec != 8 {
-		t.Errorf("Expected segment_sec 8, got %d", task.SegmentSec)
+		t.Errorf("Expected segment_sec 8, got %v", task.SegmentSec)
 	}
 	if task.FrameIntervalSec != 2 {
-		t.Errorf("Expected frame_interval_sec 2, got %d", task.FrameIntervalSec)
+		t.Errorf("Expected frame_interval_sec 2, got %v", task.FrameIntervalSec)
 	}
 }
