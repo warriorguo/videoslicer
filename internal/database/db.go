@@ -45,15 +45,29 @@ func NewDB(config Config) (*DB, error) {
 }
 
 func (db *DB) EnsureSchema() error {
-	migrations := []string{
-		`ALTER TABLE video_tasks ALTER COLUMN frame_interval_sec TYPE DOUBLE PRECISION`,
+	// Check current column type
+	var dataType string
+	err := db.QueryRow(
+		`SELECT data_type FROM information_schema.columns
+		 WHERE table_name = 'video_tasks' AND column_name = 'frame_interval_sec'`,
+	).Scan(&dataType)
+	if err != nil {
+		log.Printf("EnsureSchema: failed to query column type: %v", err)
+		return nil
 	}
-	for _, m := range migrations {
-		if _, err := db.Exec(m); err != nil {
-			// Ignore if already the correct type
-			log.Printf("Migration skipped (may already be applied): %v", err)
-		}
+	log.Printf("EnsureSchema: frame_interval_sec current type = %s", dataType)
+
+	if dataType == "double precision" {
+		log.Printf("EnsureSchema: column already DOUBLE PRECISION, no migration needed")
+		return nil
 	}
+
+	_, err = db.Exec(`ALTER TABLE video_tasks ALTER COLUMN frame_interval_sec TYPE DOUBLE PRECISION USING frame_interval_sec::double precision`)
+	if err != nil {
+		log.Printf("EnsureSchema: ALTER TABLE failed: %v", err)
+		return fmt.Errorf("migration failed: %w", err)
+	}
+	log.Printf("EnsureSchema: successfully migrated frame_interval_sec to DOUBLE PRECISION")
 	return nil
 }
 

@@ -110,6 +110,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.insertTask(task); err != nil {
+		log.Printf("insertTask error: %v", err)
 		http.Error(w, "Failed to create task", http.StatusInternalServerError)
 		return
 	}
