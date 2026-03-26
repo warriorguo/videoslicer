@@ -49,7 +49,12 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
-	
+
+	// Run schema migrations
+	if err := db.EnsureSchema(); err != nil {
+		log.Fatalf("Failed to run schema migrations: %v", err)
+	}
+
 	// Create API server
 	server := api.NewServer(db, api.Config{
 		Port:        cfg.Server.Port,

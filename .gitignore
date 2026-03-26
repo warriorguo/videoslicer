@@ -1,5 +1,5 @@
 bin/
-server
+/server
 *.test
 tasks/
 *.sh

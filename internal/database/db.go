@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -41,6 +42,19 @@ func NewDB(config Config) (*DB, error) {
 	}
 
 	return &DB{db}, nil
+}
+
+func (db *DB) EnsureSchema() error {
+	migrations := []string{
+		`ALTER TABLE video_tasks ALTER COLUMN frame_interval_sec TYPE DOUBLE PRECISION`,
+	}
+	for _, m := range migrations {
+		if _, err := db.Exec(m); err != nil {
+			// Ignore if already the correct type
+			log.Printf("Migration skipped (may already be applied): %v", err)
+		}
+	}
+	return nil
 }
 
 func (db *DB) Close() error {
