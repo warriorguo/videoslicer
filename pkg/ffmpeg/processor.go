@@ -106,7 +106,8 @@ func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec float64) 
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
-	outputPattern := filepath.Join(outputDir, "c%03d.mp4")
+	ext := outputExtForInput(inputPath)
+	outputPattern := filepath.Join(outputDir, "c%03d"+ext)
 	segmentTime := fmt.Sprintf("%.4f", segmentSec)
 
 	// Try fast copy mode first
@@ -121,37 +122,58 @@ func (p *Processor) SliceVideo(inputPath, outputDir string, segmentSec float64) 
 		outputPattern)
 
 	if err := cmd.Run(); err != nil {
-		// Fallback to re-encoding mode
+		// Fallback to re-encoding mode with format-appropriate codecs
+		vcodec, acodec := reencodeCodecs(ext)
 		cmd = exec.CommandContext(ctx, "ffmpeg",
 			"-hide_banner", "-y",
 			"-i", inputPath,
-			"-c:v", "libx264",
+			"-c:v", vcodec,
 			"-preset", "veryfast",
 			"-crf", "23",
-			"-c:a", "aac",
+			"-c:a", acodec,
 			"-b:a", "128k",
 			"-f", "segment",
 			"-segment_time", segmentTime,
 			"-reset_timestamps", "1",
 			outputPattern)
-		
+
 		if err := cmd.Run(); err != nil {
 			return nil, fmt.Errorf("ffmpeg slice failed: %w", err)
 		}
 	}
-	
+
 	// Find generated clip files
-	pattern := filepath.Join(outputDir, "c*.mp4")
+	pattern := filepath.Join(outputDir, "c*"+ext)
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find clip files: %w", err)
 	}
-	
+
 	if len(matches) == 0 {
 		return nil, fmt.Errorf("no clip files generated")
 	}
-	
+
 	return matches, nil
+}
+
+// outputExtForInput returns the output file extension based on the input file format.
+func outputExtForInput(inputPath string) string {
+	switch strings.ToLower(filepath.Ext(inputPath)) {
+	case ".webm":
+		return ".webm"
+	default:
+		return ".mp4"
+	}
+}
+
+// reencodeCodecs returns the video and audio codec names for re-encoding based on output extension.
+func reencodeCodecs(ext string) (vcodec, acodec string) {
+	switch ext {
+	case ".webm":
+		return "libvpx-vp9", "libopus"
+	default:
+		return "libx264", "aac"
+	}
 }
 
 func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float64, format string) ([]string, error) {
