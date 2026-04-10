@@ -36,6 +36,7 @@ Content-Type: multipart/form-data
 - `segment_sec` (optional, default: 8): Duration of each video clip in seconds
 - `frame_interval_sec` (optional, default: 2): Frame extraction interval in seconds
 - `frame_format` (optional, default: "jpg"): Frame image format ("jpg" or "png")
+- `bg_color` (optional, default: "black"): Background color for frame extraction, composited behind transparent videos (e.g. WebM with alpha). Accepts any ffmpeg color name or hex value (e.g. "black", "white", "0x1a1a1a")
 - `zip_format` (optional, default: "zip"): Archive format ("zip" or "tar.gz")
 
 **Response (201):**
@@ -53,7 +54,8 @@ curl -X POST ${BASE_URL}/v1/tasks \
   -F "file=@video.mp4" \
   -F "segment_sec=5" \
   -F "frame_interval_sec=1" \
-  -F "frame_format=jpg"
+  -F "frame_format=jpg" \
+  -F "bg_color=black"
 ```
 
 ### Get Task Status
@@ -74,6 +76,7 @@ GET /v1/tasks/{task_id}
     "segment_sec": 5,
     "frame_interval_sec": 2,
     "frame_format": "jpg",
+    "bg_color": "black",
     "zip_format": "zip"
   },
   "result": {

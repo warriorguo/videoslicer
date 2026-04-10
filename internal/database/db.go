@@ -57,17 +57,34 @@ func (db *DB) EnsureSchema() error {
 	}
 	log.Printf("EnsureSchema: frame_interval_sec current type = %s", dataType)
 
-	if dataType == "double precision" {
-		log.Printf("EnsureSchema: column already DOUBLE PRECISION, no migration needed")
-		return nil
+	if dataType != "double precision" {
+		_, err = db.Exec(`ALTER TABLE video_tasks ALTER COLUMN frame_interval_sec TYPE DOUBLE PRECISION USING frame_interval_sec::double precision`)
+		if err != nil {
+			log.Printf("EnsureSchema: ALTER TABLE failed: %v", err)
+			return fmt.Errorf("migration failed: %w", err)
+		}
+		log.Printf("EnsureSchema: successfully migrated frame_interval_sec to DOUBLE PRECISION")
 	}
 
-	_, err = db.Exec(`ALTER TABLE video_tasks ALTER COLUMN frame_interval_sec TYPE DOUBLE PRECISION USING frame_interval_sec::double precision`)
+	// Add bg_color column if it doesn't exist
+	var bgColorExists bool
+	err = db.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM information_schema.columns
+		 WHERE table_name = 'video_tasks' AND column_name = 'bg_color')`,
+	).Scan(&bgColorExists)
 	if err != nil {
-		log.Printf("EnsureSchema: ALTER TABLE failed: %v", err)
-		return fmt.Errorf("migration failed: %w", err)
+		log.Printf("EnsureSchema: failed to check bg_color column: %v", err)
+		return nil
 	}
-	log.Printf("EnsureSchema: successfully migrated frame_interval_sec to DOUBLE PRECISION")
+	if !bgColorExists {
+		_, err = db.Exec(`ALTER TABLE video_tasks ADD COLUMN bg_color VARCHAR(20) NOT NULL DEFAULT 'black'`)
+		if err != nil {
+			log.Printf("EnsureSchema: failed to add bg_color column: %v", err)
+			return fmt.Errorf("migration failed: %w", err)
+		}
+		log.Printf("EnsureSchema: added bg_color column")
+	}
+
 	return nil
 }
 

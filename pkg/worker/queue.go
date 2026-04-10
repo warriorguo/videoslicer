@@ -47,7 +47,7 @@ func (tq *TaskQueue) AcquireTask() (*models.VideoTask, error) {
 		)
 		RETURNING task_id, status, stage, progress_percent, created_at, updated_at,
 				  source_path, source_size, result_path, result_size, manifest_path,
-				  segment_sec, frame_interval_sec, frame_format, zip_format,
+				  segment_sec, frame_interval_sec, frame_format, bg_color, zip_format,
 				  error_code, error_message, lease_owner, lease_expires_at, callback_url
 	`
 
@@ -61,7 +61,7 @@ func (tq *TaskQueue) AcquireTask() (*models.VideoTask, error) {
 		&task.TaskID, &task.Status, &task.Stage, &task.ProgressPercent,
 		&task.CreatedAt, &task.UpdatedAt, &task.SourcePath, &task.SourceSize,
 		&resultPath, &task.ResultSize, &manifestPath,
-		&task.SegmentSec, &task.FrameIntervalSec, &task.FrameFormat, &task.ZipFormat,
+		&task.SegmentSec, &task.FrameIntervalSec, &task.FrameFormat, &task.BgColor, &task.ZipFormat,
 		&errorCode, &errorMessage, &task.LeaseOwner, &leaseExpiresAt, &callbackURL)
 
 	if err != nil {

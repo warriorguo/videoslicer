@@ -67,10 +67,11 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	segmentSec := getFloatParam(r, "segment_sec", 8)
 	frameIntervalSec := getFloatParam(r, "frame_interval_sec", 2)
 	frameFormat := getStringParam(r, "frame_format", "jpg")
+	bgColor := getStringParam(r, "bg_color", "black")
 	zipFormat := getStringParam(r, "zip_format", "zip")
 
-	log.Printf("CreateTask params: segment_sec=%v, frame_interval_sec=%v, frame_format=%v, zip_format=%v",
-		segmentSec, frameIntervalSec, frameFormat, zipFormat)
+	log.Printf("CreateTask params: segment_sec=%v, frame_interval_sec=%v, frame_format=%v, bg_color=%v, zip_format=%v",
+		segmentSec, frameIntervalSec, frameFormat, bgColor, zipFormat)
 
 	taskID := "t_" + xid.New().String()
 	
@@ -106,6 +107,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		SegmentSec:      segmentSec,
 		FrameIntervalSec: frameIntervalSec,
 		FrameFormat:     frameFormat,
+		BgColor:         bgColor,
 		ZipFormat:       zipFormat,
 	}
 
@@ -150,6 +152,7 @@ func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request) {
 			SegmentSec:       task.SegmentSec,
 			FrameIntervalSec: task.FrameIntervalSec,
 			FrameFormat:      task.FrameFormat,
+			BgColor:          task.BgColor,
 			ZipFormat:        task.ZipFormat,
 		},
 		CreatedAt: task.CreatedAt,
@@ -216,14 +219,14 @@ func (h *Handler) insertTask(task *models.VideoTask) error {
 	query := `
 		INSERT INTO video_tasks (
 			task_id, status, stage, progress_percent, created_at, updated_at,
-			source_path, source_size, segment_sec, frame_interval_sec, 
-			frame_format, zip_format
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			source_path, source_size, segment_sec, frame_interval_sec,
+			frame_format, bg_color, zip_format
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	`
 	_, err := h.db.Exec(query,
 		task.TaskID, task.Status, task.Stage, task.ProgressPercent,
 		task.CreatedAt, task.UpdatedAt, task.SourcePath, task.SourceSize,
-		task.SegmentSec, task.FrameIntervalSec, task.FrameFormat, task.ZipFormat)
+		task.SegmentSec, task.FrameIntervalSec, task.FrameFormat, task.BgColor, task.ZipFormat)
 	return err
 }
 
@@ -231,20 +234,20 @@ func (h *Handler) getTask(taskID string) (*models.VideoTask, error) {
 	query := `
 		SELECT task_id, status, stage, progress_percent, created_at, updated_at,
 			   source_path, source_size, result_path, result_size, manifest_path,
-			   segment_sec, frame_interval_sec, frame_format, zip_format,
+			   segment_sec, frame_interval_sec, frame_format, bg_color, zip_format,
 			   error_code, error_message, lease_owner, lease_expires_at, callback_url
 		FROM video_tasks WHERE task_id = $1
 	`
-	
+
 	task := &models.VideoTask{}
 	var resultPath, manifestPath, errorCode, errorMessage, leaseOwner, callbackURL sql.NullString
 	var leaseExpiresAt sql.NullTime
-	
+
 	err := h.db.QueryRow(query, taskID).Scan(
 		&task.TaskID, &task.Status, &task.Stage, &task.ProgressPercent,
 		&task.CreatedAt, &task.UpdatedAt, &task.SourcePath, &task.SourceSize,
 		&resultPath, &task.ResultSize, &manifestPath,
-		&task.SegmentSec, &task.FrameIntervalSec, &task.FrameFormat, &task.ZipFormat,
+		&task.SegmentSec, &task.FrameIntervalSec, &task.FrameFormat, &task.BgColor, &task.ZipFormat,
 		&errorCode, &errorMessage, &leaseOwner, &leaseExpiresAt, &callbackURL)
 	
 	if err != nil {

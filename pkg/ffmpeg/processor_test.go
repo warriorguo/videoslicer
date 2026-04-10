@@ -84,7 +84,7 @@ func TestExtractFrames_NonExistentFile(t *testing.T) {
 	// Create a temporary directory for output
 	tempDir := t.TempDir()
 	
-	_, err := processor.ExtractFrames("/nonexistent/video.mp4", tempDir, 2.0, "jpg")
+	_, err := processor.ExtractFrames("/nonexistent/video.mp4", tempDir, 2.0, "jpg", "black")
 	if err == nil {
 		t.Error("Expected error for non-existent file, got nil")
 	}
@@ -100,7 +100,7 @@ func TestExtractFramesFixedCount_NonExistentFile(t *testing.T) {
 	// Create a temporary directory for output
 	tempDir := t.TempDir()
 	
-	_, err := processor.ExtractFramesFixedCount("/nonexistent/video.mp4", tempDir, 3, "jpg")
+	_, err := processor.ExtractFramesFixedCount("/nonexistent/video.mp4", tempDir, 3, "jpg", "black")
 	if err == nil {
 		t.Error("Expected error for non-existent file, got nil")
 	}

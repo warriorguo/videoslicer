@@ -47,6 +47,7 @@ type VideoTask struct {
 	SegmentSec       float64 `db:"segment_sec" json:"segment_sec"`
 	FrameIntervalSec float64 `db:"frame_interval_sec" json:"frame_interval_sec"`
 	FrameFormat     string `db:"frame_format" json:"frame_format"`
+	BgColor         string `db:"bg_color" json:"bg_color"`
 	ZipFormat       string `db:"zip_format" json:"zip_format"`
 	
 	// Error info
@@ -70,6 +71,7 @@ type TaskParams struct {
 	SegmentSec       float64 `json:"segment_sec"`
 	FrameIntervalSec float64 `json:"frame_interval_sec"`
 	FrameFormat     string `json:"frame_format"`
+	BgColor         string `json:"bg_color"`
 	ZipFormat       string `json:"zip_format"`
 }
 

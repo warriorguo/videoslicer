@@ -176,27 +176,30 @@ func reencodeCodecs(ext string) (vcodec, acodec string) {
 	}
 }
 
-func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float64, format string) ([]string, error) {
+func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float64, format string, bgColor string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
 	outputPattern := filepath.Join(outputDir, "f%04d."+format)
 
-	var cmd *exec.Cmd
-	if intervalSec <= 0 {
-		// Extract every frame
-		cmd = exec.CommandContext(ctx, "ffmpeg",
-			"-hide_banner", "-y",
-			"-i", clipPath,
-			outputPattern)
-	} else {
-		fpsFilter := fmt.Sprintf("fps=1/%g", intervalSec)
-		cmd = exec.CommandContext(ctx, "ffmpeg",
-			"-hide_banner", "-y",
-			"-i", clipPath,
-			"-vf", fpsFilter,
-			outputPattern)
+	// Build video filter chain: background color overlay + optional fps
+	if bgColor == "" {
+		bgColor = "black"
 	}
+	bgFilter := fmt.Sprintf("color=c=%s:s=1x1[bg];[bg][0:v]scale2ref[bg][v];[bg][v]overlay=shortest=1", bgColor)
+
+	var vf string
+	if intervalSec <= 0 {
+		vf = bgFilter
+	} else {
+		vf = fmt.Sprintf("%s,fps=1/%g", bgFilter, intervalSec)
+	}
+
+	cmd := exec.CommandContext(ctx, "ffmpeg",
+		"-hide_banner", "-y",
+		"-i", clipPath,
+		"-filter_complex", vf,
+		outputPattern)
 
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
@@ -214,30 +217,35 @@ func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float6
 	return matches, nil
 }
 
-func (p *Processor) ExtractFramesFixedCount(clipPath, outputDir string, count int, format string) ([]string, error) {
+func (p *Processor) ExtractFramesFixedCount(clipPath, outputDir string, count int, format string, bgColor string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
-	
+
 	// First, get clip duration
 	info, err := p.Probe(clipPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to probe clip: %w", err)
 	}
-	
+
 	if info.Duration <= 0 {
 		return nil, fmt.Errorf("invalid clip duration")
 	}
-	
+
 	outputPattern := filepath.Join(outputDir, "f%04d."+format)
-	
+
+	if bgColor == "" {
+		bgColor = "black"
+	}
+	bgFilter := fmt.Sprintf("color=c=%s:s=1x1[bg];[bg][0:v]scale2ref[bg][v];[bg][v]overlay=shortest=1", bgColor)
+
 	// Calculate fps for fixed count
 	fps := float64(count) / info.Duration
-	fpsFilter := fmt.Sprintf("fps=%.6f", fps)
-	
+	vf := fmt.Sprintf("%s,fps=%.6f", bgFilter, fps)
+
 	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-hide_banner", "-y",
 		"-i", clipPath,
-		"-vf", fpsFilter,
+		"-filter_complex", vf,
 		"-frames:v", strconv.Itoa(count),
 		outputPattern)
 	

@@ -25,6 +25,7 @@ type ProcessingParams struct {
 	SegmentSec       float64 `json:"segment_sec"`
 	FrameIntervalSec float64 `json:"frame_interval_sec"`
 	FrameFormat      string `json:"frame_format"`
+	BgColor          string `json:"bg_color"`
 	ZipFormat        string `json:"zip_format"`
 }
 

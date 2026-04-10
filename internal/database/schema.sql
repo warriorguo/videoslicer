@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS video_tasks (
     segment_sec DOUBLE PRECISION NOT NULL DEFAULT 8,
     frame_interval_sec DOUBLE PRECISION NOT NULL DEFAULT 2,
     frame_format VARCHAR(10) NOT NULL DEFAULT 'jpg',
+    bg_color VARCHAR(20) NOT NULL DEFAULT 'black',
     zip_format VARCHAR(10) NOT NULL DEFAULT 'zip',
     
     error_code VARCHAR(50),

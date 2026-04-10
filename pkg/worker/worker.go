@@ -154,7 +154,7 @@ func (w *Worker) processTask(task *models.VideoTask) error {
 			return fmt.Errorf("failed to create clip frames directory: %w", err)
 		}
 		
-		frameFiles, err := w.processor.ExtractFrames(clipFile, clipFramesDir, task.FrameIntervalSec, task.FrameFormat)
+		frameFiles, err := w.processor.ExtractFrames(clipFile, clipFramesDir, task.FrameIntervalSec, task.FrameFormat, task.BgColor)
 		if err != nil {
 			return fmt.Errorf("failed to extract frames from clip %s: %w", clipFile, err)
 		}
@@ -194,6 +194,7 @@ func (w *Worker) processTask(task *models.VideoTask) error {
 			SegmentSec:       task.SegmentSec,
 			FrameIntervalSec: task.FrameIntervalSec,
 			FrameFormat:      task.FrameFormat,
+			BgColor:          task.BgColor,
 			ZipFormat:        task.ZipFormat,
 		},
 		Clips: clips,
