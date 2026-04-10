@@ -29,17 +29,15 @@ RUN apk add --no-cache ffmpeg ca-certificates
 RUN addgroup -g 1001 -S videoslicer && \
     adduser -u 1001 -S videoslicer -G videoslicer
 
-# Set working directory
+# Set working directory and create tasks directory
 WORKDIR /app
+RUN mkdir -p /app/tasks && chown -R videoslicer:videoslicer /app
 
-# Copy binary from builder
-COPY --from=builder /app/videoslicer .
-
-# Create tasks directory and invalidate cache
-RUN mkdir -p /app/tasks && chown -R videoslicer:videoslicer /app && echo "built $(date -u)"
-
-# Switch to app user
+# Switch to app user before copying binary
 USER videoslicer
+
+# Copy binary from builder last — no RUN layers after this to avoid Kaniko cache overwrite
+COPY --from=builder --chown=videoslicer:videoslicer /app/videoslicer .
 
 # Expose port
 EXPOSE 8080
