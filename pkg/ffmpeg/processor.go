@@ -182,11 +182,16 @@ func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float6
 
 	outputPattern := filepath.Join(outputDir, "f%04d."+format)
 
-	// Build video filter chain: background color overlay + optional fps
+	// Probe clip to get dimensions for the background color filter
+	info, err := p.Probe(clipPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to probe clip: %w", err)
+	}
+
 	if bgColor == "" {
 		bgColor = "black"
 	}
-	bgFilter := fmt.Sprintf("color=c=%s:s=1x1[bg];[bg][0:v]scale2ref[bg][v];[bg][v]overlay=shortest=1", bgColor)
+	bgFilter := fmt.Sprintf("color=c=%s:s=%dx%d[bg];[0:v]format=yuva420p[v];[bg][v]overlay=shortest=1", bgColor, info.Width, info.Height)
 
 	var vf string
 	if intervalSec <= 0 {
@@ -236,7 +241,7 @@ func (p *Processor) ExtractFramesFixedCount(clipPath, outputDir string, count in
 	if bgColor == "" {
 		bgColor = "black"
 	}
-	bgFilter := fmt.Sprintf("color=c=%s:s=1x1[bg];[bg][0:v]scale2ref[bg][v];[bg][v]overlay=shortest=1", bgColor)
+	bgFilter := fmt.Sprintf("color=c=%s:s=%dx%d[bg];[0:v]format=yuva420p[v];[bg][v]overlay=shortest=1", bgColor, info.Width, info.Height)
 
 	// Calculate fps for fixed count
 	fps := float64(count) / info.Duration
