@@ -191,7 +191,7 @@ func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float6
 	if bgColor == "" {
 		bgColor = "black"
 	}
-	bgFilter := fmt.Sprintf("color=c=%s:s=%dx%d[bg];[0:v]format=yuva420p[v];[bg][v]overlay=shortest=1", bgColor, info.Width, info.Height)
+	bgFilter := fmt.Sprintf("color=c=%s:s=%dx%d[bg];[bg][0:v]overlay=shortest=1", bgColor, info.Width, info.Height)
 
 	var vf string
 	if intervalSec <= 0 {
@@ -200,25 +200,28 @@ func (p *Processor) ExtractFrames(clipPath, outputDir string, intervalSec float6
 		vf = fmt.Sprintf("%s,fps=1/%g", bgFilter, intervalSec)
 	}
 
-	cmd := exec.CommandContext(ctx, "ffmpeg",
-		"-hide_banner", "-y",
-		"-i", clipPath,
-		"-filter_complex", vf,
-		outputPattern)
+	// Build ffmpeg args: use libvpx decoder for WebM to ensure alpha channel is decoded
+	args := []string{"-hide_banner", "-y"}
+	if strings.ToLower(filepath.Ext(clipPath)) == ".webm" {
+		args = append(args, "-c:v", "libvpx")
+	}
+	args = append(args, "-i", clipPath, "-filter_complex", vf, outputPattern)
+
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
 
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("ffmpeg frame extraction failed: %w, stderr: %s", err, stderr.String())
 	}
-	
+
 	// Find generated frame files
 	pattern := filepath.Join(outputDir, "f*."+format)
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find frame files: %w", err)
 	}
-	
+
 	return matches, nil
 }
 
@@ -241,18 +244,20 @@ func (p *Processor) ExtractFramesFixedCount(clipPath, outputDir string, count in
 	if bgColor == "" {
 		bgColor = "black"
 	}
-	bgFilter := fmt.Sprintf("color=c=%s:s=%dx%d[bg];[0:v]format=yuva420p[v];[bg][v]overlay=shortest=1", bgColor, info.Width, info.Height)
+	bgFilter := fmt.Sprintf("color=c=%s:s=%dx%d[bg];[bg][0:v]overlay=shortest=1", bgColor, info.Width, info.Height)
 
 	// Calculate fps for fixed count
 	fps := float64(count) / info.Duration
 	vf := fmt.Sprintf("%s,fps=%.6f", bgFilter, fps)
 
-	cmd := exec.CommandContext(ctx, "ffmpeg",
-		"-hide_banner", "-y",
-		"-i", clipPath,
-		"-filter_complex", vf,
-		"-frames:v", strconv.Itoa(count),
-		outputPattern)
+	// Use libvpx decoder for WebM to ensure alpha channel is decoded
+	args := []string{"-hide_banner", "-y"}
+	if strings.ToLower(filepath.Ext(clipPath)) == ".webm" {
+		args = append(args, "-c:v", "libvpx")
+	}
+	args = append(args, "-i", clipPath, "-filter_complex", vf, "-frames:v", strconv.Itoa(count), outputPattern)
+
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
 	
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("ffmpeg frame extraction failed: %w", err)
